@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract LifeInsurance {
+    address public owner; // The company
+    uint256 public deathBenefit; // Amount to be paid out upon death
+    uint256 public paymentAmount; // Payment for the policy
+    address public insured; // Insured person's address
+    address public beneficiary; // Beneficiary's wallet address
+
+    // Events
+    event DeathBenefitPaid(address indexed beneficiary, uint256 amount);
+
+    // Modifiers
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can perform this action");
+        _;
+    }
+
+    modifier onlyInsured() {
+        require(msg.sender == insured, "Only the insured can perform this action");
+        _;
+    }
+
+    // Constructor
+    constructor(address _insured, uint256 _deathBenefit, uint256 _paymentAmount) {
+        owner = msg.sender; // Set contract deployer as the owner
+        insured = _insured; // Insured person's address
+        deathBenefit = _deathBenefit; // Initial death benefit
+        paymentAmount = _paymentAmount; // Initial payment amount
+    }
+
+    // Functions
+    function setDeathBenefit(uint256 _amount) external onlyOwner {
+        deathBenefit = _amount;
+    }
+
+    function setPaymentAmount(uint256 _amount) external onlyOwner {
+        paymentAmount = _amount;
+    }
+
+    function setBeneficiary(address _beneficiary) external onlyInsured {
+        beneficiary = _beneficiary;
+    }
+
+    function payout() external onlyOwner {
+        require(beneficiary != address(0), "Beneficiary not set");
+        require(address(this).balance >= deathBenefit, "Insufficient funds in contract");
+        
+        payable(beneficiary).transfer(deathBenefit);
+        emit DeathBenefitPaid(beneficiary, deathBenefit);
+    }
+
+    // Receive Ether for demonstration purposes
+    receive() external payable {}
+}
